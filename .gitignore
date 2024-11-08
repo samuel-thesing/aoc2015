@@ -2,5 +2,4 @@
 cmake-build-debug/
 cmake-build-realease/
 src/**/i1.txt
-src/**/t1.txt
-src/**/t2.txt
+src/**/t?.txt
