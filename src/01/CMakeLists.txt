@@ -1,5 +1,6 @@
 
-add_executable(aoc2015_01_1 part1.cpp ../../utils/Logger.cpp)
+add_executable(aoc2015_01_1 part1.cpp ../../utils/Logger.cpp
+        ../../utils/utils.h)
 
 target_link_dependency(aoc2015_01_1 HEADER spdlog-1.14.1)
 target_include_directories(aoc2015_01_1 PUBLIC ../../utils)
