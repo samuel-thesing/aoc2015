@@ -22,22 +22,39 @@ templates = []
 for template_name in os.listdir("templates"):
     templates.append(Template(f"templates/{template_name}"))
 
+num_updated = 0
+num_created = 0
 
 def create_day(day: int) -> bool:
+    global num_created, num_updated
+
     day_name = f"{day:02}"
     dir_path = f"./src/{day_name}"
-    if os.path.isdir(dir_path) and len(os.listdir(dir_path)) != 0:
-        return False
 
+    created = False
+    if not os.path.isdir(dir_path):
+        os.makedirs(dir_path)
+        created = True
 
-    os.makedirs(dir_path)
+    updated = False
     for template in templates:
-        with open(f"{dir_path}/{template.name}", "w") as file:
+        file_path = f"{dir_path}/{template.name}"
+        if os.path.isfile(file_path):
+            continue
+
+        updated = True
+        with open(file_path, "x") as file:
             file.write(template.get_replaced(day_name))
 
-    return True
+    if created:
+        num_created += 1
+    elif updated:
+        num_updated += 1
 
 
-num_generated_days = len(list(0 for day in range(1, 26) if create_day(day)))
-print(f"successfully generated {num_generated_days} days")
+for day in range(1, 26):
+    create_day(day)
+
+print(f"Created {num_created} days")
+print(f"Updated {num_updated} days")
 
