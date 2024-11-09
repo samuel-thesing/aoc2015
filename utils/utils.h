@@ -1,6 +1,9 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <regex>
+#include <queue>
+
 #include "io_utils.h"
 
 
@@ -84,6 +87,50 @@ T min(T arg, Args... args) {
 template<typename T, typename U> requires (std::is_same_v<T, U>)
 T min(T t, U u) {
 	return t < u ? t : u;
+}
+
+
+
+template<typename T>
+T string_to_generic(std::string s) {
+	Logger::critical("No implementation for generating this generic");
+	return T();
+}
+
+template<>
+std::string string_to_generic<std::string>(std::string s) {
+	return s;
+}
+
+template<>
+int string_to_generic<int>(std::string s) {
+	return std::stoi(s);
+}
+
+template<>
+double string_to_generic<double>(std::string s) {
+	return std::stod(s);
+}
+
+template<>
+char string_to_generic<char>(std::string s) {
+	return s[0];
+}
+
+
+template<typename... Args, std::size_t... Indices>
+std::tuple<Args...> make_tuple_from_match(const std::smatch& match, std::index_sequence<Indices...>) {
+	return std::make_tuple<Args...>(string_to_generic<Args>(match[Indices + 1].str())...);
+}
+
+template<typename... Args>
+std::tuple<Args...> extract_data(const std::regex& pattern, std::string s) {
+	std::smatch match;
+	if (!std::regex_match(s, match, pattern)) {
+		Logger::critical("Failed to match regex for '{}'", s);
+	}
+
+	return make_tuple_from_match<Args...>(match, std::index_sequence_for<Args...>{});
 }
 
 #endif //UTILS_H
