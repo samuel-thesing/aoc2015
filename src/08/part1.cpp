@@ -8,8 +8,24 @@
 #define DAY "08"
 
 int solve(const std::string &input) {
+	int sum = 0;
+	auto lines = split(input, "\n");
+	for (const auto& line : lines) {
+		sum += 2;
+		for (int i = 1; i < line.size()-1; i++) {
+			if (line[i] == '\\') {
+				if (line[i+1] == 'x') {
+					sum += 3;
+					i += 3;
+				} else {
+					sum++;
+					i++;
+				}
+			}
+		}
+	}
 
-	return 0;
+	return sum;
 }
 
 bool test(const std::string &filename, int expected) {
@@ -26,9 +42,7 @@ int main(int argc, char** argv) {
 	std::cout << "Advent of Code " << YEAR << " Day " << DAY << std::endl
 		<< "-------------------------------------------------------------" << std::endl;
 	std::vector<std::pair<std::string, int>> test_files = {
-		{"t1.txt", },
-		{"t2.txt", },
-		{"t3.txt", }
+		{"t1.txt", 12}
 	};
 	bool test_failed = false;
 	for (const auto& [test_file, expected_result] : test_files) {
