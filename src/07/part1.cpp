@@ -7,18 +7,6 @@
 #define YEAR "2015"
 #define DAY "07"
 
-bool isDigit(char c) {
-	return '0' <= c && c <= '9';
-}
-
-bool isLowercase(char c) {
-	return 'a' <= c && c <= 'z';
-}
-
-bool isUppercase(char c) {
-	return 'A' <= c && c <= 'Z';
-}
-
 bool eval_wire(const std::string& wire, std::unordered_map<std::string, unsigned short>& values) {
 	const auto [expression, target] = extract_data<std::string, std::string>(std::regex("(.*) -> (.*)"), wire);
 

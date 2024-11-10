@@ -133,4 +133,16 @@ std::tuple<Args...> extract_data(const std::regex& pattern, std::string s) {
 	return make_tuple_from_match<Args...>(match, std::index_sequence_for<Args...>{});
 }
 
+bool isDigit(char c) {
+	return '0' <= c && c <= '9';
+}
+
+bool isLowercase(char c) {
+	return 'a' <= c && c <= 'z';
+}
+
+bool isUppercase(char c) {
+	return 'A' <= c && c <= 'Z';
+}
+
 #endif //UTILS_H
