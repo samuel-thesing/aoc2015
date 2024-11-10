@@ -7,9 +7,67 @@
 #define YEAR "2015"
 #define DAY "09"
 
-int solve(const std::string &input) {
+int traveling_salesman(const std::vector<std::string>& cities, std::vector<bool>& visited,
+	std::unordered_map<std::string, std::unordered_map<std::string, int>>& adjMat, int curCityIdx) {
 
-	return 0;
+	int minDist = 1000000000;
+	for (int i = 0; i < cities.size(); i++) {
+		if (visited[i]) continue;
+
+		visited[i] = true;
+		int dist = adjMat[cities[curCityIdx]][cities[i]] + traveling_salesman(cities, visited, adjMat, i);
+		if (dist < minDist) {
+			minDist = dist;
+		}
+		visited[i] = false;
+
+	}
+	if (minDist == 1000000000) {
+		return 0;
+	}
+
+	return minDist;
+}
+
+int solve(const std::string &input) {
+	std::unordered_map<std::string, std::unordered_map<std::string, int>> adjMat;
+	auto lines = split(input, "\n");
+
+	std::regex pattern("(.*) to (.*) = (.*)");
+	for (const auto& line : lines) {
+		const auto [city_a, city_b, dist] = extract_data<std::string, std::string, int>(pattern, line);
+		if (adjMat.find(city_a) == adjMat.end()) {
+			adjMat.emplace(city_a, std::unordered_map<std::string, int>());
+		}
+
+		if (adjMat.find(city_b) == adjMat.end()) {
+			adjMat.emplace(city_b, std::unordered_map<std::string, int>());
+		}
+
+		adjMat[city_a].emplace(city_b, dist);
+		adjMat[city_b].emplace(city_a, dist);
+	}
+
+	std::vector<std::string> cities;
+	for (const auto& pair : adjMat) {
+		cities.push_back(pair.first);
+	}
+	auto visited = std::vector<bool>(cities.size(), false);
+
+	int minDist = 1000000000;
+	for (int i = 0; i < cities.size(); i++) {
+		if (visited[i]) continue;
+
+		visited[i] = true;
+		int dist = traveling_salesman(cities, visited, adjMat, i);
+		if (dist < minDist) {
+			minDist = dist;
+		}
+		visited[i] = false;
+
+	}
+
+	return minDist;
 }
 
 bool test(const std::string &filename, int expected) {
@@ -26,9 +84,7 @@ int main(int argc, char** argv) {
 	std::cout << "Advent of Code " << YEAR << " Day " << DAY << std::endl
 		<< "-------------------------------------------------------------" << std::endl;
 	std::vector<std::pair<std::string, int>> test_files = {
-		{"t1.txt", },
-		{"t2.txt", },
-		{"t3.txt", }
+		{"t1.txt", 605}
 	};
 	bool test_failed = false;
 	for (const auto& [test_file, expected_result] : test_files) {
