@@ -8,8 +8,27 @@
 #define DAY "10"
 
 int solve(const std::string &input) {
+	std::string current = input;
+	for (int i = 0; i < 40; i++) {
+		std::string next = "";
+		int count = 0;
+		char prev_c = '\0';
+		for (char c : current) {
+			if (c != prev_c) {
+				if (count != 0) {
+					next += std::to_string(count) + prev_c;
+				}
+				count = 1;
+				prev_c = c;
+			} else {
+				count++;
+			}
+		}
+		next += std::to_string(count) + prev_c;
+		current = next;
+	}
 
-	return 0;
+	return current.size();
 }
 
 bool test(const std::string &filename, int expected) {
@@ -26,9 +45,7 @@ int main(int argc, char** argv) {
 	std::cout << "Advent of Code " << YEAR << " Day " << DAY << std::endl
 		<< "-------------------------------------------------------------" << std::endl;
 	std::vector<std::pair<std::string, int>> test_files = {
-		{"t1.txt", },
-		{"t2.txt", },
-		{"t3.txt", }
+		{"t1.txt", 82350}
 	};
 	bool test_failed = false;
 	for (const auto& [test_file, expected_result] : test_files) {
