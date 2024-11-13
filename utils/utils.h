@@ -108,6 +108,11 @@ int string_to_generic<int>(std::string s) {
 }
 
 template<>
+long string_to_generic<long>(std::string s) {
+	return std::stol(s);
+}
+
+template<>
 double string_to_generic<double>(std::string s) {
 	return std::stod(s);
 }
