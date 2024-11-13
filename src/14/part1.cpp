@@ -8,8 +8,29 @@
 #define DAY "14"
 
 int solve(const std::string &input) {
+	auto lines = split(input, "\n");
 
-	return 0;
+	std::regex pattern(".+ can fly (\\d+) km/s for (\\d+) seconds, but then must rest for (\\d+) seconds.");
+
+	int max_dist = 0;
+
+	for (const auto &line : lines) {
+		const auto& [speed, duration, rest] = extract_data<int, int, int>(pattern, line);
+
+		int distance = 0;
+		int traveling = 0;
+		for (int i = 0; i < 2503; i++) {
+			traveling++;
+			distance += speed;
+			if (traveling == duration) {
+				traveling = 0;
+				i += rest;
+			}
+		}
+		max_dist = max(max_dist, distance);
+	}
+
+	return max_dist;
 }
 
 bool test(const std::string &filename, int expected) {
@@ -26,9 +47,7 @@ int main(int argc, char** argv) {
 	std::cout << "Advent of Code " << YEAR << " Day " << DAY << std::endl
 		<< "-------------------------------------------------------------" << std::endl;
 	std::vector<std::pair<std::string, int>> test_files = {
-		{"t1.txt", },
-		{"t2.txt", },
-		{"t3.txt", }
+		{"t1.txt", 2660}
 	};
 	bool test_failed = false;
 	for (const auto& [test_file, expected_result] : test_files) {
