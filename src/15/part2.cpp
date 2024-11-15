@@ -1,6 +1,6 @@
 #include <utils.h>
 
-typedef std::vector<std::vector<std::array<long, 5>>> PreCalcTable;
+typedef Table<std::array<long, 5>> PreCalcTable;
 
 long recursive(const PreCalcTable& preCalcTable, long ingredient_idx, long spoons_used, std::vector<long>& spoons) {
 	if (ingredient_idx == spoons.size()-1) {

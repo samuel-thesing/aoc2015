@@ -20,6 +20,32 @@
 
 #include <Logger.h>
 
+#include "matrix.h"
+
+
+/* ====================================================================================================
+ * Typedefs
+ */
+template <typename Value>
+using Table = std::vector<std::vector<Value>>;
+
+template <typename Key, typename Value>
+using NamedTable = std::unordered_map<Key, std::unordered_map<Key, Value>>;
+
+/* ====================================================================================================
+ * Structs
+ */
+struct Point {
+	int x;
+	int y;
+};
+
+template<>
+struct std::hash<Point> {
+	size_t operator()(const Point& point) const {
+		return static_cast<size_t>(point.x) ^ (static_cast<size_t>(point.y) << 32);
+	}
+};
 
 /* ====================================================================================================
  * Whitespace Correction
@@ -107,7 +133,7 @@ std::string read_file(const std::string& filename) {
  * @param valueFormatter transformation function for data-values
  */
 template<typename Key, typename Value>
-void printAdjacencyMatrix(const std::unordered_map<Key, std::unordered_map<Key, Value>>& mat,
+void printAdjacencyMatrix(const NamedTable<Key, Value>& mat,
 	std::function<std::string(Key)> keyFormatter, std::function<std::string(Value)> valueFormatter) {
 
 	std::set<Key> keys;
@@ -351,7 +377,6 @@ public:
 		Logger::info("==================================================");
 	}
 
-
 	void set_result_transformation(std::function<std::string(Result)> result_transform_fn) {
 		this->result_transform_fn = result_transform_fn;
 	}
@@ -458,5 +483,6 @@ public:
 		return results;
 	}
 };
+
 
 #endif //UTILS_H
