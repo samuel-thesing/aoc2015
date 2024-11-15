@@ -441,7 +441,7 @@ public:
 		}
 
 		if (tests_failed != 0) {
-			Logger::error("Failed: {}", tests_succeeded);
+			Logger::error("Failed: {}", tests_failed);
 		}
 		Logger::info("==================================================");
 
