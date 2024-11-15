@@ -1,11 +1,4 @@
-#include <iostream>
-
-#include <io_utils.h>
 #include <utils.h>
-#include <Logger.h>
-
-#define YEAR "2015"
-#define DAY "16"
 
 std::string solve(const std::string &input) {
 	std::unordered_map<std::string, int> map = {
@@ -55,33 +48,10 @@ std::string solve(const std::string &input) {
 	Logger::critical("No solution found");
 }
 
-bool test(const std::string &filename, std::string expected) {
-	std::string input = read_file(filename);
-	auto result = solve(input);
-	if (result == expected) return true;
-
-	Logger::error("{} failed. Expected {} but got {}", filename, expected, result);
-	return false;
-}
-
 int main(int argc, char** argv) {
-	Logger::init();
-	std::cout << "Advent of Code " << YEAR << " Day " << DAY << std::endl
-		<< "-------------------------------------------------------------" << std::endl;
-	std::vector<std::pair<std::string, std::string>> test_files = {
-	};
-	bool test_failed = false;
-	for (const auto& [test_file, expected_result] : test_files) {
-		test_failed |= !test(test_file, expected_result);
-	}
-	if (test_failed) {
-		Logger::critical("Aborting after failed tests");
-	}
-	Logger::info("All tests passed");
+	auto runner = Runner<std::string>(solve, 2015, 16);
 
-	std::string input = read_file("i1.txt");
-	auto result = solve(input);
-	std::cout << result << std::endl;
+	runner.add_input_file("i1.txt");
 
-	// 212 low
+	runner.run();
 }

@@ -1,11 +1,4 @@
-#include <iostream>
-
-#include <io_utils.h>
 #include <utils.h>
-#include <Logger.h>
-
-#define YEAR "2015"
-#define DAY "17"
 
 void check_solution(int num_containers, std::pair<int, int>& result) {
 	if (num_containers > result.first) return;
@@ -44,33 +37,12 @@ int solve(const std::string &input, int amount) {
 	return result.second;
 }
 
-template<typename T, typename U>
-bool test(const std::string &filename, T expected, U args) {
-	std::string input = read_file(filename);
-	auto result = solve(input, args);
-	if (result == expected) return true;
-
-	Logger::error("{} failed. Expected {} but got {}", filename, expected, result);
-	return false;
-}
-
 int main(int argc, char** argv) {
-	Logger::init();
-	std::cout << "Advent of Code " << YEAR << " Day " << DAY << std::endl
-		<< "-------------------------------------------------------------" << std::endl;
-	std::vector<std::tuple<std::string, int, int>> test_files = {
-		{"t1.txt", 3, 25}
-	};
-	bool test_failed = false;
-	for (const auto& [test_file, expected_result, arguments] : test_files) {
-		test_failed |= !test(test_file, expected_result, arguments);
-	}
-	if (test_failed) {
-		Logger::critical("Aborting after failed tests");
-	}
-	Logger::info("All tests passed");
+	auto runner = Runner<int, int>(solve, 2015, 17);
 
-	std::string input = read_file("i1.txt");
-	auto result = solve(input, 150);
-	std::cout << result << std::endl;
+	runner.add_test_file("t1.txt", 3, 25);
+
+	runner.add_input_file("i1.txt", 150);
+
+	runner.run();
 }

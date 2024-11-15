@@ -1,15 +1,8 @@
-#include <iostream>
-
-#include <io_utils.h>
 #include <utils.h>
-#include <Logger.h>
 
-#define YEAR "2015"
-#define DAY "10"
-
-int solve(const std::string &input) {
+std::string solve(const std::string &input, int iterations) {
 	std::string current = input;
-	for (int i = 0; i < 50; i++) {
+	for (int i = 0; i < iterations; i++) {
 		std::string next = "";
 		int count = 0;
 		char prev_c = '\0';
@@ -28,35 +21,22 @@ int solve(const std::string &input) {
 		current = next;
 	}
 
-	return current.size();
-}
-
-bool test(const std::string &filename, int expected) {
-	std::string input = read_file(filename);
-	auto result = solve(input);
-	if (result == expected) return true;
-
-	Logger::error("{} failed. Expected {} but got {}", filename, expected, result);
-	return false;
+	return current;
 }
 
 int main(int argc, char** argv) {
-	Logger::init();
-	std::cout << "Advent of Code " << YEAR << " Day " << DAY << std::endl
-		<< "-------------------------------------------------------------" << std::endl;
-	std::vector<std::pair<std::string, int>> test_files = {
-		{"t1.txt", 1166642}
-	};
-	bool test_failed = false;
-	for (const auto& [test_file, expected_result] : test_files) {
-		test_failed |= !test(test_file, expected_result);
-	}
-	if (test_failed) {
-		Logger::critical("Aborting after failed tests");
-	}
-	Logger::info("All tests passed");
+	auto runner = Runner<std::string, int>(solve, 2015, 10);
+	runner.set_result_transformation([](const std::string& s) {
+		return std::to_string(s.size());
+	});
 
-	std::string input = read_file("i1.txt");
-	auto result = solve(input);
-	std::cout << result << std::endl;
+	runner.add_test_string("1", "11", 1);
+	runner.add_test_string("1", "21", 2);
+	runner.add_test_string("1", "1211", 3);
+	runner.add_test_string("11", "111221", 3);
+	runner.add_test_string("1", "312211", 5);
+
+	runner.add_input_file("i1.txt", 50);
+
+	runner.run();
 }

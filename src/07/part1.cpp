@@ -1,11 +1,4 @@
-#include <iostream>
-
-#include <io_utils.h>
 #include <utils.h>
-#include <Logger.h>
-
-#define YEAR "2015"
-#define DAY "07"
 
 bool eval_wire(const std::string& wire, std::unordered_map<std::string, unsigned short>& values) {
 	const auto [expression, target] = extract_data<std::string, std::string>(std::regex("(.*) -> (.*)"), wire);
@@ -50,7 +43,7 @@ bool eval_wire(const std::string& wire, std::unordered_map<std::string, unsigned
 	return true;
 }
 
-unsigned short solve(const std::string &input) {
+unsigned short solve(const std::string &input, std::string final_wire) {
 	auto lines = split(input, "\n");
 	std::unordered_map<std::string, unsigned short> values{};
 	std::regex pattern("(.*) -> (.*)");
@@ -59,7 +52,7 @@ unsigned short solve(const std::string &input) {
 		if (!eval_wire(line, values)) {
 			wires.push(line);
 		} else {
-			auto it = values.find("a");
+			auto it = values.find(final_wire);
 			if (it != values.end()) {
 				return it->second;
 			}
@@ -72,46 +65,28 @@ unsigned short solve(const std::string &input) {
 		if (!eval_wire(wire, values)) {
 			wires.push(wire);
 		} else {
-			auto it = values.find("a");
+			auto it = values.find(final_wire);
 			if (it != values.end()) {
 				return it->second;
 			}
 		}
 	}
 
-	for (const auto& [key, value] : values) {
-		std::cout << key << ": " << value << std::endl;
-	}
-
 	return -1;
 }
 
-bool test(const std::string &filename, int expected) {
-	std::string input = read_file(filename);
-	auto result = solve(input);
-	if (result == expected) return true;
-
-	Logger::error("{} failed. Expected {} but got {}", filename, expected, result);
-	return false;
-}
-
 int main(int argc, char** argv) {
-	Logger::init();
-	std::cout << "Advent of Code " << YEAR << " Day " << DAY << std::endl
-		<< "-------------------------------------------------------------" << std::endl;
-	std::vector<std::pair<std::string, int>> test_files = {
-		{"t1.txt", 65079}
-	};
-	bool test_failed = false;
-	for (const auto& [test_file, expected_result] : test_files) {
-		test_failed |= !test(test_file, expected_result);
-	}
-	if (test_failed) {
-		Logger::critical("Aborting after failed tests");
-	}
-	Logger::info("All tests passed");
+	auto runner = Runner<int, std::string>(solve, 2015, 7);
+	runner.add_test_file("t1.txt", 72, "d");
+	runner.add_test_file("t1.txt", 507, "e");
+	runner.add_test_file("t1.txt", 492, "f");
+	runner.add_test_file("t1.txt", 114, "g");
+	runner.add_test_file("t1.txt", 65412, "h");
+	runner.add_test_file("t1.txt", 65079, "i");
+	runner.add_test_file("t1.txt", 123, "x");
+	runner.add_test_file("t1.txt", 456, "y");
 
-	std::string input = read_file("i1.txt");
-	auto result = solve(input);
-	std::cout << result << std::endl;
+	runner.add_input_file("i1.txt", "a");
+
+	runner.run();
 }

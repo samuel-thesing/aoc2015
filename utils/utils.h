@@ -3,10 +3,65 @@
 
 #include <regex>
 #include <queue>
+#include <string>
+#include <fstream>
+#include <vector>
+#include <algorithm>
+#include <memory>
+#include <math.h>
+#include <unordered_map>
+#include <unordered_set>
+#include <deque>
+#include <filesystem>
+#include <Logger.h>
+#include <utils.h>
+#include <set>
+#include <iostream>
 
-#include "io_utils.h"
+#include <Logger.h>
 
 
+/* ====================================================================================================
+ * Whitespace Correction
+ */
+
+/**
+ * fills the left side of a string to the given length using the filler character
+ * @param s string to be filled
+ * @param len length to be filled to
+ * @param filler char used to fill the string - default space
+ * @return filled string
+ */
+std::string pad_left(const std::string& s, int len, char filler = ' ') {
+	return std::string(std::max(len - s.length(), 0ull), filler) + s;
+}
+
+/**
+ * fills the right side of a string to the given length using the filler character
+ * @param s string to be filled
+ * @param len length to be filled to
+ * @param filler char used to fill the string - default space
+ * @return filled string
+ */
+std::string pad_right(const std::string& s, int len, char filler = ' ') {
+	return s + std::string(std::max(len - s.length(), 0ull), filler);
+}
+
+std::string pad_center(const std::string& s, int len, char filler = ' ') {
+	auto len_half = s.length() / 2;
+	return pad_right(pad_left(s, len_half, filler), len - len_half, filler);
+}
+
+std::string repeat(char c, int n) {
+	return std::string(n, c);
+}
+
+/**
+ * trims whitespace (recognized using
+ * std::isspace()) from both ends of the string
+ * @param s string to be trimmed
+ * @return trimmed string
+ */
 std::string trim(std::string s) {
 	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char c) {
 		return !std::isspace(c);
@@ -19,7 +74,103 @@ std::string trim(std::string s) {
 	return s;
 }
 
+/* ====================================================================================================
+ * Reading Data
+ */
+/**
+ * Reads file
+ * @param filename
+ * @return content
+ * @throws 0xDEAD If file could not be found or opened
+ */
+std::string read_file(const std::string& filename) {
+	auto dir_name = std::filesystem::current_path().filename().string();
+	auto cwd = std::filesystem::current_path() / "../../../" / "src" / dir_name;
+	cwd = std::filesystem::canonical(cwd);
+	auto file = std::ifstream(cwd / filename, std::ios::binary | std::ios::in);
+    if (!file.is_open()) {
+		Logger::critical("Failed to open file '{}'. CWD: {}", filename, cwd.string());
+    }
+
+	std::stringstream contents;
+	contents << file.rdbuf();
+	return contents.str();
+}
+
+/* ====================================================================================================
+ * Printing Data
+ */
+/**
+ * Prints a 2d unordered_map
+ * @param mat data to print
+ * @param keyFormatter transformation function for key-values
+ * @param valueFormatter transformation function for data-values
+ */
+template<typename Key, typename Value>
+void printAdjacencyMatrix(const std::unordered_map<Key, std::unordered_map<Key, Value>>& mat,
+	std::function<std::string(Key)> keyFormatter, std::function<std::string(Value)> valueFormatter) {
+
+	std::set<Key> keys;
+	int max_key_len = 0;
+	for (const auto& [key, row] : mat) {
+		keys.emplace(key);
+		max_key_len = std::max(max_key_len, (int)(keyFormatter(key).size()));
+		for (const auto& [key2, _] : row) {
+			keys.emplace(key2);
+			max_key_len = std::max(max_key_len, (int)(keyFormatter(key2).size()));
+		}
+	}
+
+	int keyCounter = 0;
+	std::unordered_map<Key, int> keyIdx;
+	for (const auto& key : keys) {
+		keyIdx.emplace(key, keyCounter);
+		keyCounter++;
+	}
+
+	std::vector<std::vector<std::string>> values;
+	for (int i = 0; i < keyCounter; i++) {
+		values.emplace_back(keyCounter, pad_left("-", max_key_len) + "  ");
+	}
+
+	for (const auto& [key, row] : mat) {
+		const auto x = keyIdx.find(key);
+		for (const auto& [key2, value] : row) {
+			const auto y = keyIdx.find(key2);
+			values[x->second][y->second] = pad_left(valueFormatter(value), max_key_len) + "  ";
+		}
+	}
+
+	std::cout << pad_right("", max_key_len);
+	for (const auto& key : keys) {
+		std::cout << "  " << pad_right(std::string(key), max_key_len);
+	}
+	std::cout << std::endl;
+
+	for (const auto& [key, row] : mat) {
+		std::cout << pad_right(std::string(key), max_key_len) << "  ";
+		const auto idx = keyIdx.find(key);
+		for (const auto& value : values[idx->second]) {
+			std::cout << value;
+		}
+		std::cout << std::endl;
+	}
+}
+
+/* ====================================================================================================
+ * Splitting
+ */
+
+/**
+ *	Splits a given string at the given delimiter and trims the parts
+ *	@param s string to be split
+ *	@param delim delimiter (can be longer than 1 char)
+ */
 std::vector<std::string> split(const std::string& s, const std::string& delim) {
+	if (delim.empty()) {
+		Logger::critical("`split` received an empty delimiter");
+		return {};
+	}
 	if (trim(s).empty()) {
 		return {};
 	}
@@ -41,6 +192,12 @@ std::vector<std::string> split(const std::string& s, const std::string& delim) {
 	return parts;
 }
 
+/**
+ *	Splits a given string at the given delimiter and trims the parts before converting them using the given function.
+ *	@param s string to be split
+ *	@param delim delimiter (can be longer than 1 char)
+ *	@param fn converts parts after splitting using this function
+ */
 template<typename T>
 std::vector<T> split(const std::string& s, const std::string& delim, std::function<T(std::string)> fn) {
 	auto splitted = split(s, delim);
@@ -52,6 +209,12 @@ std::vector<T> split(const std::string& s, const std::string& delim, std::functi
 	return result;
 }
 
+/**
+ *	Splits a given string at the first occurrence of the given delimiter and returns both parts as pair
+ *	@param s string to be split
+ *	@param delim delimiter (can be longer than 1 char)
+ *	@param fn converts parts after splitting using this function
+ */
 std::pair<std::string, std::string> split_once(const std::string& s, const std::string& delim) {
 	auto idx = s.find(delim);
 	if (idx == std::string::npos) {
@@ -59,14 +222,6 @@ std::pair<std::string, std::string> split_once(const std::string& s, const std::
 	}
 
 	return {s.substr(0, idx), s.substr(idx + delim.size())};
-}
-
-std::string pad_left(const std::string& s, int len) {
-	return std::string(std::max(len - s.length(), 0ull), ' ') + s;
-}
-
-std::string pad_right(const std::string& s, int len) {
-	return s + std::string(std::max(len - s.length(), 0ull), ' ');
 }
 
 template<typename T, typename... Args> requires (std::is_same_v<T, Args...>)
@@ -128,6 +283,13 @@ std::tuple<Args...> make_tuple_from_match(const std::smatch& match, std::index_s
 	return std::make_tuple<Args...>(string_to_generic<Args>(match[Indices + 1].str())...);
 }
 
+/**
+ * Extracts data from a given string using a regex and converts the matches to the correct type using the generics provided
+ * @tparam Args Types of the matches. A template specialization of string_to_generic must be provided
+ * @param pattern regex pattern to match
+ * @param s	string to be matched
+ * @return tuple of the converted matches
+ */
 template<typename... Args>
 std::tuple<Args...> extract_data(const std::regex& pattern, std::string s) {
 	std::smatch match;
@@ -149,5 +311,152 @@ bool isLowercase(char c) {
 bool isUppercase(char c) {
 	return 'A' <= c && c <= 'Z';
 }
+
+template<typename Result, typename... Args>
+struct Test {
+	std::string input;
+	Result expected;
+	bool file;
+	std::tuple<Args...> args;
+};
+
+template<typename... Args>
+struct Input {
+	std::string input;
+	bool file;
+	std::tuple<Args...> args;
+};
+
+template <typename Result, typename... Args>
+class Runner {
+private:
+	typedef std::function<Result(std::string, Args...)> SolverFn;
+	typedef std::function<std::string(Result)> ResultTransformFn;
+
+	SolverFn solve_fn;
+	ResultTransformFn result_transform_fn = nullptr;
+
+	std::vector<Test<Result, Args...>> tests;
+	std::vector<Input<Args...>> inputs;
+	std::vector<Result> results;
+
+	unsigned tests_failed;
+	unsigned tests_succeeded;
+
+public:
+	Runner(SolverFn solve_fn, const int year, const int day) : solve_fn(solve_fn), tests_failed(0), tests_succeeded(0) {
+		Logger::init();
+		Logger::info("==================================================");
+		Logger::info("=========== Advent of Code {} Day {} ===========", year, pad_left(std::to_string(day), 2, '0'));
+		Logger::info("==================================================");
+	}
+
+
+	void set_result_transformation(std::function<std::string(Result)> result_transform_fn) {
+		this->result_transform_fn = result_transform_fn;
+	}
+
+	void add_test_string(const std::string& input, Result expected, Args... args) {
+		tests.push_back(Test<Result, Args...>(input, expected, false, args...));
+	}
+
+	void add_test_file(const std::string& filename, Result expected, Args... args) {
+		tests.push_back(Test<Result, Args...>(filename, expected, true, args...));
+	}
+
+	void add_input_string(const std::string& input, Args... args) {
+		inputs.push_back(Input<Args...>(input, false, args...));
+	}
+
+	void add_input_file(const std::string& filename, Args... args) {
+		inputs.push_back(Input<Args...>(filename, true, args...));
+	}
+
+	bool run_test(const Test<Result, Args...>& test) {
+		auto input = test.input;
+		if (test.file) {
+			input = read_file(input);
+		}
+		Result result = std::apply(
+			[=](auto&&... args) -> Result {
+				return solve_fn(input, args...);
+			},
+			test.args
+		);
+
+		if (result == test.expected) {
+			tests_succeeded++;
+			return true;
+		}
+
+		Logger::error("Failed Test '{}': Expected {} but got {}", test.input, test.expected, result);
+		tests_failed++;
+		return false;
+	}
+
+	bool run_tests() {
+		if (tests.empty()) return true;
+
+		Logger::info("==================================================");
+		Logger::info("Running {} Tests", tests.size());
+		Logger::info("==================================================");
+
+		tests_failed = 0;
+		tests_succeeded = 0;
+
+		for (auto& test : tests) {
+			run_test(test);
+		}
+
+		Logger::info("==================================================");
+		Logger::info("Tests Finished");
+		Logger::info("--------------------------------------------------");
+		if (tests_succeeded != 0) {
+			Logger::info("Succeded: {}", tests_succeeded);
+		}
+
+		if (tests_failed != 0) {
+			Logger::error("Failed: {}", tests_succeeded);
+		}
+		Logger::info("==================================================");
+
+		return tests_failed == 0;
+	}
+
+	Result run_input(const Input<Args...>& input) {
+		auto input_str = input.input;
+		if (input.file) {
+			input_str = read_file(input_str);
+		}
+		Result result = std::apply(
+			[=](auto&&... args) -> Result {
+				return solve_fn(input_str, args...);
+			},
+			input.args
+		);
+
+		if (result_transform_fn == nullptr) {
+			Logger::info("Input Finished '{}': {}", input.input, result);
+		} else {
+			Logger::info("Input Finished '{}': {}", input.input, result_transform_fn(result));
+		}
+
+		return result;
+	}
+
+	std::vector<Result> run_inputs() {
+		results.clear();
+		for (auto& input : inputs) {
+			results.emplace_back(run_input(input));
+		}
+		return results;
+	}
+
+	std::vector<Result> run() {
+		if (!run_tests()) return {};
+		run_inputs();
+		return results;
+	}
+};
 
 #endif //UTILS_H

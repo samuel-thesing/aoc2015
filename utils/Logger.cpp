@@ -13,7 +13,7 @@ void Logger::init() {
 	sinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
 	sinks.emplace_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>("Log.log", true));
 
-	sinks[0]->set_pattern("%^[%T] [%l]: %v%$");
+	sinks[0]->set_pattern("%^%v%$");
 	sinks[1]->set_pattern("[%T] [%l]: %v");
 
 	logger = std::make_shared<spdlog::logger>("CORE", sinks.begin(), sinks.end());

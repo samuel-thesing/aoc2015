@@ -1,11 +1,4 @@
-#include <iostream>
-
-#include <io_utils.h>
 #include <utils.h>
-#include <Logger.h>
-
-#define YEAR "2015"
-#define DAY "12"
 
 int solve(const std::string &input) {
 	std::vector<char> stack;
@@ -69,25 +62,14 @@ bool test(const std::string &filename, int expected) {
 }
 
 int main(int argc, char** argv) {
-	Logger::init();
-	std::cout << "Advent of Code " << YEAR << " Day " << DAY << std::endl
-		<< "-------------------------------------------------------------" << std::endl;
-	std::vector<std::pair<std::string, int>> test_files = {
-		{"t1.txt", 6},
-		{"t2.txt", 4},
-		{"t4.txt", 6},
-		{"t5.txt", 0},
-	};
-	bool test_failed = false;
-	for (const auto& [test_file, expected_result] : test_files) {
-		test_failed |= !test(test_file, expected_result);
-	}
-	if (test_failed) {
-		Logger::critical("Aborting after failed tests");
-	}
-	Logger::info("All tests passed");
+	auto runner = Runner<int>(solve, 2015, 12);
 
-	std::string input = read_file("i1.txt");
-	auto result = solve(input);
-	std::cout << result << std::endl;
+	runner.add_test_string("[1,2,3]", 6);
+	runner.add_test_string(R"([1,{"c":"red","b":2},3])", 4);
+	runner.add_test_string(R"({"d":"red","e":[1,2,3,4],"f":5})", 0);
+	runner.add_test_string(R"([1,"red",5])", 6);
+
+	runner.add_input_file("i1.txt");
+
+	runner.run();
 }

@@ -1,10 +1,4 @@
-#include <iostream>
-#include <io_utils.h>
-#include <Logger.h>
-
-#define YEAR "2015"
-#define DAY "01"
-
+#include <utils.h>
 
 int solve(const std::string& input) {
 	int sum = 0;
@@ -19,11 +13,18 @@ int solve(const std::string& input) {
 }
 
 int main(int argc, char** argv) {
-	Logger::init();
-	std::cout << "Advent of Code " << YEAR << " Day " << DAY << std::endl
-		<< "-------------------------------------------------------------" << std::endl;
+	auto runner = Runner<int>(solve, 2015, 01);
+	runner.add_test_string("(())", 0);
+	runner.add_test_string("()()", 0);
+	runner.add_test_string("(((", 3);
+	runner.add_test_string("(()(()(", 3);
+	runner.add_test_string("))(((((", 3);
+	runner.add_test_string("())", -1);
+	runner.add_test_string("))(", -1);
+	runner.add_test_string(")))", -3);
+	runner.add_test_string(")())())", -3);
 
-	std::string input = read_file("i1.txt");
-	auto result = solve(input);
-	std::cout << result << std::endl;
+	runner.add_input_file("i1.txt");
+
+	runner.run();
 }

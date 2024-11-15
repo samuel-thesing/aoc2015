@@ -1,11 +1,4 @@
-#include <iostream>
-
-#include <io_utils.h>
 #include <utils.h>
-#include <Logger.h>
-
-#define YEAR "2015"
-#define DAY "02"
 
 int solve(const std::string &input) {
 	auto lines = split(input, "\n");
@@ -27,11 +20,11 @@ int solve(const std::string &input) {
 }
 
 int main(int argc, char** argv) {
-	Logger::init();
-	std::cout << "Advent of Code " << YEAR << " Day " << DAY << std::endl
-		<< "-------------------------------------------------------------" << std::endl;
+	auto runner = Runner<int>(solve, 2015, 02);
+	runner.add_test_string("2x3x4", 34);
+	runner.add_test_string("1x1x10", 14);
 
-	std::string input = read_file("i1.txt");
-	auto result = solve(input);
-	std::cout << result << std::endl;
+	runner.add_input_file("i1.txt");
+
+	runner.run();
 }
