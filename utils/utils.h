@@ -100,6 +100,40 @@ std::string trim(std::string s) {
 	return s;
 }
 
+std::string replace_all(const std::string& str, const std::string& pattern, const std::string& replace) {
+	size_t n = 0;
+	std::string str_cpy = str;
+
+	while ((n = str_cpy.find(pattern, n)) != std::string::npos){
+		str_cpy.replace(n, pattern.size(), replace);
+		n += replace.size();
+	}
+
+	return str_cpy;
+}
+
+size_t find_nth(const std::string& str, const std::string& pattern, size_t n) {
+	int count = 0;
+	size_t last_idx = str.find(pattern, n);
+	while (last_idx != std::string::npos) {
+		if (count == n) {
+			return last_idx;
+		}
+		last_idx = str.find(pattern, last_idx+1);
+		++count;
+	}
+	return std::string::npos;
+}
+
+std::optional<std::string> replace_nth(const std::string& str, const std::string& pattern, std::string replace, int n) {
+	auto idx = find_nth(str, pattern, n);
+	if (idx == std::string::npos) {
+		return {};
+	}
+
+	return str.substr(0, idx) + replace + str.substr(idx + pattern.size());
+}
+
 /* ====================================================================================================
  * Reading Data
  */
@@ -120,7 +154,19 @@ std::string read_file(const std::string& filename) {
 
 	std::stringstream contents;
 	contents << file.rdbuf();
-	return contents.str();
+
+	return replace_all(contents.str(), "\r\n", "\n");
+}
+
+std::vector<std::string> split_lines(const std::string& s) {
+	std::vector<std::string> result;
+	std::stringstream ss(s);
+	std::string line;
+	while (std::getline(ss, line)) {
+		line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
+		result.emplace_back(line);
+	}
+	return result;
 }
 
 /* ====================================================================================================
@@ -338,6 +384,34 @@ bool isUppercase(char c) {
 	return 'A' <= c && c <= 'Z';
 }
 
+std::string format_time(std::chrono::duration<std::chrono::nanoseconds::rep, std::chrono::nanoseconds::period> duration) {
+	std::string result = "";
+	const int64_t lengths[] = {
+		// nano
+		1000, //micro
+		1000, //milli
+		1000, //sec
+		60, // min
+		60, // hours
+		24, // days
+		365 // years
+	};
+
+	const char* names[] = {" ns", " \xE6s ", " ms ", " s ", " min ", " h ", " d "};
+
+	auto rest = duration.count();
+	int i = 0;
+	while (rest != 0 && i < 7) {
+		result.insert(0, std::to_string(rest % lengths[i]) + names[i]);
+		rest /= lengths[i];
+		i++;
+	}
+	if (rest != 0) {
+		result = std::to_string(rest) + " a " + result;
+	}
+	return result;
+}
+
 template<typename Result, typename... Args>
 struct Test {
 	std::string input;
@@ -453,17 +527,21 @@ public:
 		if (input.file) {
 			input_str = read_file(input_str);
 		}
+		auto start_time = std::chrono::high_resolution_clock::now();
 		Result result = std::apply(
 			[=](auto&&... args) -> Result {
 				return solve_fn(input_str, args...);
 			},
 			input.args
 		);
+		auto end_time = std::chrono::high_resolution_clock::now();
+		auto duration =
+			std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time);
 
 		if (result_transform_fn == nullptr) {
-			Logger::info("Input Finished '{}': {}", input.input, result);
+			Logger::info("Input Finished '{}': {} ({})", input.input, result, format_time(duration));
 		} else {
-			Logger::info("Input Finished '{}': {}", input.input, result_transform_fn(result));
+			Logger::info("Input Finished '{}': {} ({})", input.input, result_transform_fn(result), format_time(duration));
 		}
 
 		return result;
@@ -483,6 +561,16 @@ public:
 		return results;
 	}
 };
+
+std::vector<size_t> find_all_idx(const std::string& s, const std::string& pattern) {
+	std::vector<size_t> idxs{};
+	size_t last_idx = s.find(pattern);
+	while (last_idx != std::string::npos) {
+		idxs.push_back(last_idx);
+		last_idx = s.find(pattern, last_idx+1);
+	}
+	return idxs;
+}
 
 
 #endif //UTILS_H
