@@ -572,5 +572,13 @@ std::vector<size_t> find_all_idx(const std::string& s, const std::string& patter
 	return idxs;
 }
 
+std::ostream& operator<< (std::ostream& os, const std::vector<int>& list) {
+	os << "{ ";
+	for (int n : list) {
+		os << n << " ";
+	}
+	os << "}";
+	return os;
+}
 
 #endif //UTILS_H
