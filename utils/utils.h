@@ -581,4 +581,13 @@ std::ostream& operator<< (std::ostream& os, const std::vector<int>& list) {
 	return os;
 }
 
+template<typename T>
+T sum(std::vector<T> list) {
+	auto sum = static_cast<T>(0);
+	for (auto n : list) {
+		sum += n;
+	}
+	return sum;
+}
+
 #endif //UTILS_H
